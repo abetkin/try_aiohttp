@@ -11,15 +11,21 @@ dsn = 'dbname=mydb user=postgres password=postgres host=127.0.0.1'
 
 import json
 
+stats = {'light': 0, 'heavy': 0}
 
 async def websocket_handler(request):
     ws = web.WebSocketResponse(autoclose=False)
     await ws.prepare(request)
     async for msg in ws:
-        if msg.data != 'request':
+        if msg.data == 'stats':
+            await ws.send_str(json.dumps(stats))
             continue
-        if random.randrange(5):
+        elif msg.data != 'request':
+            continue
+        RATIO = 10
+        if random.randrange(RATIO):
             await ws.send_str('[]')
+            stats['light'] += 1
             continue
         async with pool.acquire() as conn:
             async with conn.cursor() as cur:
@@ -29,6 +35,7 @@ async def websocket_handler(request):
                     ret.append(row[0])
                 msg = json.dumps(ret)
                 await ws.send_str(msg)
+                stats['heavy'] += 1
 
     return ws
 
@@ -47,5 +54,3 @@ try:
     loop.run_forever()
 except KeyboardInterrupt:
     pass
-
-# 350
