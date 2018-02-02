@@ -29,7 +29,7 @@ async def websocket_handler(request):
             continue
         async with pool.acquire() as conn:
             async with conn.cursor() as cur:
-                await cur.execute("SELECT value FROM app_int WHERE value > 333")
+                await cur.execute("SELECT value FROM app_int WHERE value < 333")
                 ret = []
                 async for row in cur:
                     ret.append(row[0])
